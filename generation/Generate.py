@@ -8,6 +8,7 @@ import glob
 import shutil
 
 def create_CMSSW_tar(release, scram):
+    print " --------------- release ",release," scram ",scram
     script  = "#!/bin/bash\n"
     script += "export SCRAM_ARCH={} \n".format(scram)
     script += "source /cvmfs/cms.cern.ch/cmsset_default.sh\n"
@@ -53,12 +54,22 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     for k in totalSteps:
         cmssws.append(Steps[year][k]['release'])
         scrams.append(Steps[year][k]['SCRAM_ARCH'])
-    cmssws = list(set(cmssws))
-    # print(cmssws)
+    cmssws.append('CMSSW_10_2_22')
+    scrams.append('slc7_amd64_gcc700')
+    print cmssws[0],cmssws[-1]
+    print scrams[0],scrams[-1]
+    print cmssws
+    print scrams
+    #cmssws = list(set(cmssws))
+    #scrams = list(set(scrams))
+    print(cmssws)
 
-    for i in range(len(cmssws)):
-        cmssw = cmssws[i]
-        scram = scrams[i]
+    for cmssw,scram in zip(cmssws,scrams):
+        print cmssw,scram
+    #for i in range(len(cmssws)):
+        #cmssw = cmssws[i]
+        #print scrams[i]
+        #scram = scrams[i]
         if not os.path.isfile("data/CMSSWs/{}.tgz".format(cmssw)):
             print("Should create CMSSW tgz for release {}".format(cmssw))
             create_CMSSW_tar(cmssw, scram)
@@ -78,6 +89,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     inputsCfg = glob.glob("data/input_{}/*.py".format(year))
     inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
     fileToTransfer.extend(inputsCfg)
+    print " inputsCfg ",inputsCfg
+    print " year ",year
+    print glob.glob("data/input_{}/*Nano*.py".format(year))
     outputFile = glob.glob("data/input_{}/*Nano*.py".format(year))[0].split("/")[-1].split("_1_")[0]
     for cmssw in cmssws:
         fileToTransfer.append(os.path.abspath(glob.glob("data/CMSSWs/{}.tgz".format(cmssw))[0]))
@@ -110,6 +124,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     
     donePremixFirst = False
     totalSteps.insert(1, "premix")
+    #print " --------------- commented premix!!!!! ------------------ "
     filesToRemove = [gridpack.split("/")[-1]]
     for k in totalSteps:
         wrapper += "#Working on {} step\n\n".format(k)

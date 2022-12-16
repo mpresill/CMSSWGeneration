@@ -1,8 +1,8 @@
 {
-    "Zjj_ewk_dim6_all": {
-        "year": "2018",
-        "gridpack": "~/prova/genproductions/bin/MadGraph5_aMCatNLO/Zjj_ewk_dim6_all_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz",
-        "dipoleRecoil": false,
+    "aQGC_WPhadWMlepJJ": {
+        "year": "2016",
+        "gridpack": "/local-scratch/izoi/CMSSWGeneration/generation/gridpacks/aQGC_WPhadWMlepJJ_EWK_LO_SM_mjj100_pTj10_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz",
+        "dipoleRecoil": true,
         "removeOldRoot": false,
         "events": 2500,
         "jobs": 300,
