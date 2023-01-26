@@ -14,16 +14,16 @@
             "release": "CMSSW_9_4_9"
         }, 
         "nanoAOD": {
-            "SCRAM_ARCH": "slc6_amd64_gcc530", 
-            "filename": "SMP-RunIISummer16DR80Premix-00644_1_cfg.py", 
-            "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_test/SMP-RunIISummer16DR80Premix-00644", 
-            "release": "CMSSW_8_0_31"
-        }, 
-        "premix": {
             "SCRAM_ARCH": "slc6_amd64_gcc700", 
             "filename": "SMP-RunIISummer16NanoAODv7-00427_1_cfg.py", 
             "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_test/SMP-RunIISummer16NanoAODv7-00427", 
             "release": "CMSSW_10_2_24_patch1"
+        }, 
+        "premix": {
+            "SCRAM_ARCH": "slc6_amd64_gcc530", 
+            "filename": "SMP-RunIISummer16DR80Premix-00644_1_cfg.py", 
+            "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_test/SMP-RunIISummer16DR80Premix-00644", 
+            "release": "CMSSW_8_0_31"
         }
     }, 
     "2017": {
