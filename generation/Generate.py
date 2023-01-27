@@ -26,7 +26,7 @@ def create_CMSSW_tar(release, scram):
     script += "scram b\n"
     script += "cd ../..\n"
     script += "tar -zcf {}.tgz {}\n".format(release, release)
-    script += "rm -rf {}\n".format(release)
+    #script += "rm -rf {}\n".format(release)
     nameTmpScript = "script_{}.sh".format(randint(100000,900000))
     with open(nameTmpScript, "w") as file:
         file.write(script)
@@ -101,8 +101,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
 
     jdl = "Universe = vanilla \n"
-    if 'slc6' in scram:
-         jdl += 'SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
+    if 'slc6' in Steps[year][k]['SCRAM_ARCH']:
+         jdl += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
+         jdl += 'Requirements = HasSingularity \n'
     jdl += "Executable = wrapper.sh\n"
     jdl += "arguments = $(proc) {}\n".format(events)
     jdl += "request_cpus = 8 \n"
@@ -153,9 +154,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += 'tar -xzvf {}.tgz\n'.format(Steps[year][k]['release'])
             wrapper += 'rm {}.tgz\n'.format(Steps[year][k]['release'])
             wrapper += 'cd {}/src/\n'.format(Steps[year][k]['release'])
-            if 'slc6' in Steps[year][k]['SCRAM_ARCH']: 
-                print " ADDING SINGULARITY!!!!!"
-                wrapper += "cmssw-slc6-condor \n"
+            #if 'slc6' in Steps[year][k]['SCRAM_ARCH']: 
+            #    print " ADDING SINGULARITY!!!!!"
+            #    wrapper += "cmssw-slc6-condor \n"
             wrapper += 'export SCRAM_ARCH={}\n'.format(Steps[year][k]['SCRAM_ARCH'])
             wrapper += 'scramv1 b ProjectRename # this handles linking the already compiled code - do NOT recompile\n'
             wrapper += 'eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers\n'
