@@ -149,7 +149,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             
         if Steps[year][k]['release'] != openCMSSW:
             if openCMSSW != "":
-                wrapper += "rm -rf {}".format(openCMSSW)
+                wrapper += "rm -rf {} \n".format(openCMSSW)
             wrapper += 'echo "Opening {}"\n'.format(Steps[year][k]['release'])
             wrapper += 'tar -xzvf {}.tgz\n'.format(Steps[year][k]['release'])
             wrapper += 'rm {}.tgz\n'.format(Steps[year][k]['release'])
@@ -163,11 +163,13 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += 'echo $CMSSW_BASE "is the CMSSW we have on the local worker node"\n'
             wrapper += 'cd ../../\n'
             openCMSSW = Steps[year][k]['release']
+        print " -------------     DOING SUBSTITUTIONS!!!!!!!!"    
         if k == 'lhe':
+            print " **** lhe time!!! ",gridpack," ",file
             wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
-            wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({})/g" -i {}\n'.format(events, file)
-            if dipoleRecoil:
-                wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
+            wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
+            # if dipoleRecoil:
+            #     wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
         wrapper += "date\n"
         wrapper += "cmsRun {}\n".format(file)
         if removeOldRoot:
