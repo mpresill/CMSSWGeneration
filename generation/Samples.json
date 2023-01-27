@@ -1,7 +1,7 @@
 {
-    "aQGC_WPhadWMlepJJ": {
+    "aQGC_WMhadZlepJJ": {
         "year": "2016",
-        "gridpack": "/local-scratch/izoi/CMSSWGeneration/generation/gridpacks/aQGC_WPhadWMlepJJ_EWK_LO_SM_mjj100_pTj10_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz",
+        "gridpack": "/afs/cern.ch/work/i/izoi/public/forMatteo/aQGC_WMhadZlepJJ_EWK_LO_SM_mjj100_pTj10_slc6_amd64_gcc700_CMSSW_10_2_24_patch1_tarball.tar.xz",
         "dipoleRecoil": true,
         "removeOldRoot": false,
         "events": 2500,
