@@ -1,6 +1,38 @@
 # CMSSWGeneration
 
-Up to date(31/01/2022):
+Updated: 31/01/2023
+
+This repo is being updated to handle the reproduction of samples as an existing request of another sample. It is including also the case in which a singularity is needed. It is tested on lxplus. It assumes that you have the input gridpacks in an official directory.
+
+Install this repo: ```git clone https://github.com/IreneZoi/CMSSWGeneration.git```
+
+```
+cd CMSSWGeneration/generation
+voms-proxy-init -voms cms -rfc --valid 168:0
+```
+## Download the correct CMSSW, architecture & config file for each year/step:
+
+   * First put the correct flowlinks & links in Steps.json based on the request you are working with (in the example https://cms-pdmv.cern.ch/mcm/requests?page=0&dataset_name=WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8&shown=127 )
+   
+   * Then update the variable ```sobstituteMiniAOD``` in ```Downloader.py``` that is based on the request https://cms-pdmv.cern.ch/mcm/requests?page=0&dataset_name=WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8&shown=127 
+   
+   *   ```python Downloader.py -y 2016 -s lhe premix nanoAOD miniAOD```
+   
+This updates the Steps.json file.
+
+
+## Generation 
+
+Generate all the inputs for the job submission, assuming the gridpack is in the official repo:
+```
+python Generate.py -n MYOUTPUTDIR -y 2016 -gp /cvmfs/cms.cern.ch/phys_generator/gridpacks/slc6_amd64_gcc700/13TeV/madgraph/V5_2.6.5/aQGC_semilep/aQGC_WMhadZlepJJ_EWK_LO_SM_mjj100_pTj10_slc6_amd64_gcc700_CMSSW_10_2_24_patch1_tarball.tar.xz -r False
+cd outputdir/MYOUTPUTDIR
+condor_submit submit.jdl
+```
+
+NB: It is a work in progress!!!
+
+
 # generation scripts
 In the `generation` folder there are two main scripts to generate with full sim given the `WLLJJ_WToLNu_EWK` flow.
 You are encouraged to use them because of pathces and checks automatically inserted. 
