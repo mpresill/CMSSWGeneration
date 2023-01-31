@@ -29,7 +29,8 @@ def download(path, link, run=True):
     process = subprocess.Popen("chmod +x {}".format(pathToFile),shell=True)
     process.wait()
     if run:
-        process = subprocess.Popen("cd {}; ./{}; cd -".format(path, fileName),shell=True)
+        #the first sed is needed because these production fails if not run in slc6 but the Download script doesn't work there. The second sed it is needed if there is no proper request for a sample. In that case you need to check what is going as filein when producing the nanoAOD and change it here
+        process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:/WplusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIISummer16MiniAODv3-PUMoriond17_94X_mcRun2_asymptotic_v3-v1/MINIAODSIM\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, fileName, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
         process.wait()
         fs = glob.glob(path+"/*.py")
         print()
@@ -49,8 +50,8 @@ def download(path, link, run=True):
         if len(fs)==1:
             name = {"release": fs[0].split("/")[-1], "filename": name}
         print("\n\nDeleting folder\n\n")
-        process = subprocess.Popen("rm -r {}".format(path),shell=True)
-        process.wait()
+        #process = subprocess.Popen("rm -r {}".format(path),shell=True)
+        #process.wait()
         return scram,name
     return scram,""
 

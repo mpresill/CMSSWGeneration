@@ -10,9 +10,7 @@ import shutil
 def create_CMSSW_tar(release, scram):
     print " --------------- release ",release," scram ",scram
     script  = "#!/bin/bash\n"
-    # if 'slc6' in scram: 
-    #     print " ADDING SINGULARITY!!!!!"
-    #     script += "cmssw-slc6-condor \n"
+
     script += "export SCRAM_ARCH={} \n".format(scram)
     script += "source /cvmfs/cms.cern.ch/cmsset_default.sh\n"
     script += "cd data/CMSSWs\n"
@@ -26,7 +24,7 @@ def create_CMSSW_tar(release, scram):
     script += "scram b\n"
     script += "cd ../..\n"
     script += "tar -zcf {}.tgz {}\n".format(release, release)
-    #script += "rm -rf {}\n".format(release)
+    script += "rm -rf {}\n".format(release)
     nameTmpScript = "script_{}.sh".format(randint(100000,900000))
     with open(nameTmpScript, "w") as file:
         file.write(script)
@@ -141,7 +139,6 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                     # should first run premix _1_
                     file = file[:-8]+"1_cfg.py"
                 donePremixFirst = True
-            
             else:
                 if "_1_" in file:
                     # now should run premix _2_
@@ -166,7 +163,8 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         print " -------------     DOING SUBSTITUTIONS!!!!!!!!"    
         if k == 'lhe':
             print " **** lhe time!!! ",gridpack," ",file
-            wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
+            #wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
+            wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack, file)
             wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
             # if dipoleRecoil:
             #     wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
