@@ -11,7 +11,7 @@ cd CMSSWGeneration/generation
 voms-proxy-init -voms cms -rfc --valid 168:0
 cp /tmp/x509up_XXXX /afs/cern.ch/user/U/USERNAME/private/x509up
 ```
-NB: in the command above you need to change ```USERNAME``` & ```U``` based on your cern username.
+NB: in the command above you need to change ```USERNAME``` & ```U``` based on your cern username and ```XXXX``` based on the output of the `voms-proxy-init` command.
 
 
 ## Download the correct CMSSW, architecture & config file for each year/step:
