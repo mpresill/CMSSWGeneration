@@ -88,128 +88,140 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     os.makedirs("output/{}/root".format(name))
     os.makedirs("output/{}/log".format(name))
 
-
-
-
-    
-    fileToTransfer = [os.path.abspath(gridpack)]
-    inputsCfg = glob.glob("data/input_{}/*.py".format(year))
-    inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
-    fileToTransfer.extend(inputsCfg)
-    print " inputsCfg ",inputsCfg
-    print " year ",year
-    print glob.glob("data/input_{}/*Nano*.py".format(year))
-    outputFile = glob.glob("data/input_{}/*Nano*.py".format(year))[0].split("/")[-1].split("_1_")[0]
-    for cmssw in cmssws:
-        fileToTransfer.append(os.path.abspath(glob.glob("data/CMSSWs/{}.tgz".format(cmssw))[0]))
-
-
-    jdl = "Universe = vanilla \n"
-    if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
-         jdl += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
-         jdl += 'Requirements = HasSingularity \n'
-    jdl += "Executable = wrapper.sh\n"
-    jdl += "request_cpus = 8 \n"
-    jdl += "should_transfer_files = YES\n"
-    jdl += "Error = log/$(proc).err_$(Step)\n"
-    jdl += "Output = log/$(proc).out_$(Step)\n"
-    jdl += "Log = log/$(proc).log\n"
-    jdl += "Proxy_filename = x509up\n"
-    username = getpass.getuser()
-    jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
-    jdl += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
-    jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
-    jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
-    jdl += "when_to_transfer_output = ON_EXIT\n"
-    jdl += "+JobFlavour = \"tomorrow\"\n"
-    jdl += "Queue {} proc in ({})\n".format(jobs, name)
-
-    with open("output/{}/submit.jdl".format(name), "w") as file:
-        file.write(jdl)
-    
-
-    wrapper =  "#!/bin/bash\n"
-    wrapper += 'echo "Starting job on " `date` #Date/time of start of job\n'
-    wrapper += 'echo "Running on: `uname -a`" #Condor job is running on this node\n'
-    wrapper += 'echo "System software: `cat /etc/redhat-release`" #Operating System on that node\n'
-    wrapper += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'    
-    wrapper += 'export X509_USER_PROXY=$1\n'
-    wrapper += 'voms-proxy-info -all\n'
-    wrapper += 'voms-proxy-info -all -file $1\n'
-
-    openCMSSW = ""
-    
-    donePremixFirst = False
-    totalSteps.insert(1, "premix")
-    #print " --------------- commented premix!!!!! ------------------ "
-    filesToRemove = [gridpack.split("/")[-1]]
-    for k in totalSteps:
-        wrapper += "#Working on {} step\n\n".format(k)
-        file = list(filter(lambda j: k.lower() in j.lower(), inputsCfg))[0].split("/")[-1]
-        if k == "premix":
-            if not donePremixFirst:
-                if "_2_" in file:
-                    # should first run premix _1_
-                    file = file[:-8]+"1_cfg.py"
-                donePremixFirst = True
-            else:
-                if "_1_" in file:
-                    # now should run premix _2_
-                    file = file[:-8]+"2_cfg.py"
+    same_os=False
+    #We know that the OS of the CMSSW needed for the nanoAOD reweight is slc7
+    if all('slc7' in item for item in scrams):
+        same_os = True
+        print "ALL CMSSWs need slc7"
+    else: 
+        print " SOME CMSSWs need slc7 and some slc6!!! need to fix it!!!!"
+        scrams_slc6 = scrams[:-1] #nanoAOD is the last step. Checking if without that all other CMSSWs need slc6
+        if all('slc6' in item for item in scrams_slc6):
+            print " only the nano step needs slc7, fixing it!!!"
+        else:
+            print " NOT only the nano step needs slc7 -> not fixing this!!"
+            sys.exit()
             
-        if Steps[year][k]['release'] != openCMSSW:
-            if openCMSSW != "":
-                wrapper += "rm -rf {} \n".format(openCMSSW)
-            wrapper += 'echo "Opening {}"\n'.format(Steps[year][k]['release'])
-            wrapper += 'tar -xzvf {}.tgz\n'.format(Steps[year][k]['release'])
-            wrapper += 'rm {}.tgz\n'.format(Steps[year][k]['release'])
-            wrapper += 'cd {}/src/\n'.format(Steps[year][k]['release'])
-            #if 'slc6' in Steps[year][k]['SCRAM_ARCH']: 
-            #    print " ADDING SINGULARITY!!!!!"
-            #    wrapper += "cmssw-slc6-condor \n"
-            wrapper += 'export SCRAM_ARCH={}\n'.format(Steps[year][k]['SCRAM_ARCH'])
-            wrapper += 'scramv1 b ProjectRename # this handles linking the already compiled code - do NOT recompile\n'
-            wrapper += 'eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers\n'
-            wrapper += 'echo $CMSSW_BASE "is the CMSSW we have on the local worker node"\n'
-            wrapper += 'cd ../../\n'
-            openCMSSW = Steps[year][k]['release']
-        print " -------------     DOING SUBSTITUTIONS!!!!!!!!"    
-        if k == 'lhe':
-            print " **** lhe time!!! ",gridpack," ",file
-            #wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
-            wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"{}\"),#' -i {}\n".format(gridpack, file)
-            #wrapper += 'sed -i "s/^.*input = .*$/    input = cms.untracked.uint32({})/g" -i {}\n'.format(events, file)
-            #wrapper += 'sed -i "s/nevts:*$/nevts:{}\'),/g" -i {}\n'.format(events, file)
-            #wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
-            # if dipoleRecoil:
-            #     wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
+    if same_os == True:    
+        fileToTransfer = [os.path.abspath(gridpack)]
+        inputsCfg = glob.glob("data/input_{}/*.py".format(year))
+        inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
+        fileToTransfer.extend(inputsCfg)
+        print " inputsCfg ",inputsCfg
+        print " year ",year
+        print glob.glob("data/input_{}/*Nano*.py".format(year))
+        outputFile = glob.glob("data/input_{}/*Nano*.py".format(year))[0].split("/")[-1].split("_1_")[0]
+        for cmssw in cmssws:
+            fileToTransfer.append(os.path.abspath(glob.glob("data/CMSSWs/{}.tgz".format(cmssw))[0]))
+
+
+        jdl = "Universe = vanilla \n"
+        if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
+             jdl += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
+             jdl += 'Requirements = HasSingularity \n'
+        jdl += "Executable = wrapper.sh\n"
+        jdl += "request_cpus = 8 \n"
+        jdl += "should_transfer_files = YES\n"
+        jdl += "Error = log/$(proc).err_$(Step)\n"
+        jdl += "Output = log/$(proc).out_$(Step)\n"
+        jdl += "Log = log/$(proc).log\n"
+        jdl += "Proxy_filename = x509up\n"
+        username = getpass.getuser()
+        jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
+        jdl += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
+        jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
+        jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
+        jdl += "when_to_transfer_output = ON_EXIT\n"
+        jdl += "+JobFlavour = \"tomorrow\"\n"
+        jdl += "Queue {} proc in ({})\n".format(jobs, name)
+
+        with open("output/{}/submit.jdl".format(name), "w") as file:
+            file.write(jdl)
+
+
+        wrapper =  "#!/bin/bash\n"
+        wrapper += 'echo "Starting job on " `date` #Date/time of start of job\n'
+        wrapper += 'echo "Running on: `uname -a`" #Condor job is running on this node\n'
+        wrapper += 'echo "System software: `cat /etc/redhat-release`" #Operating System on that node\n'
+        wrapper += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'    
+        wrapper += 'export X509_USER_PROXY=$1\n'
+        wrapper += 'voms-proxy-info -all\n'
+        wrapper += 'voms-proxy-info -all -file $1\n'
+
+        openCMSSW = ""
+
+        donePremixFirst = False
+        totalSteps.insert(1, "premix")
+        #print " --------------- commented premix!!!!! ------------------ "
+        filesToRemove = [gridpack.split("/")[-1]]
+        for k in totalSteps:
+            wrapper += "#Working on {} step\n\n".format(k)
+            file = list(filter(lambda j: k.lower() in j.lower(), inputsCfg))[0].split("/")[-1]
+            if k == "premix":
+                if not donePremixFirst:
+                    if "_2_" in file:
+                        # should first run premix _1_
+                        file = file[:-8]+"1_cfg.py"
+                    donePremixFirst = True
+                else:
+                    if "_1_" in file:
+                        # now should run premix _2_
+                        file = file[:-8]+"2_cfg.py"
+
+            if Steps[year][k]['release'] != openCMSSW:
+                if openCMSSW != "":
+                    wrapper += "rm -rf {} \n".format(openCMSSW)
+                wrapper += 'echo "Opening {}"\n'.format(Steps[year][k]['release'])
+                wrapper += 'tar -xzvf {}.tgz\n'.format(Steps[year][k]['release'])
+                wrapper += 'rm {}.tgz\n'.format(Steps[year][k]['release'])
+                wrapper += 'cd {}/src/\n'.format(Steps[year][k]['release'])
+                #if 'slc6' in Steps[year][k]['SCRAM_ARCH']: 
+                #    print " ADDING SINGULARITY!!!!!"
+                #    wrapper += "cmssw-slc6-condor \n"
+                wrapper += 'export SCRAM_ARCH={}\n'.format(Steps[year][k]['SCRAM_ARCH'])
+                wrapper += 'scramv1 b ProjectRename # this handles linking the already compiled code - do NOT recompile\n'
+                wrapper += 'eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers\n'
+                wrapper += 'echo $CMSSW_BASE "is the CMSSW we have on the local worker node"\n'
+                wrapper += 'cd ../../\n'
+                openCMSSW = Steps[year][k]['release']
+            print " -------------     DOING SUBSTITUTIONS!!!!!!!!"    
+            if k == 'lhe':
+                print " **** lhe time!!! ",gridpack," ",file
+                #wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
+                wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"{}\"),#' -i {}\n".format(gridpack, file)
+                #wrapper += 'sed -i "s/^.*input = .*$/    input = cms.untracked.uint32({})/g" -i {}\n'.format(events, file)
+                #wrapper += 'sed -i "s/nevts:*$/nevts:{}\'),/g" -i {}\n'.format(events, file)
+                #wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
+                # if dipoleRecoil:
+                #     wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
+            wrapper += "date\n"
+            wrapper += "cmsRun {}\n".format(file)
+            if removeOldRoot:
+                if k == "lhe":
+                    filesToRemove.append(file.split("_")[0]+".root")
+                    filesToRemove.append(file.split("_")[0]+"_inLHE.root")
+
+                elif k == "premix" and "_1_" not in file:
+                    filesToRemove.append(file.split("_")[0]+".root")
+                    filesToRemove.append(file.split("_")[0]+"_0.root")
+                elif k == "miniAOD":
+                    filesToRemove.append(file.split("_")[0]+".root")
+            wrapper += "\n\n"
+        wrapper += "rm {}\n".format(" ".join(filesToRemove))
+        wrapper += "rm -rf {} *py\n".format(openCMSSW)
         wrapper += "date\n"
-        wrapper += "cmsRun {}\n".format(file)
-        if removeOldRoot:
-            if k == "lhe":
-                filesToRemove.append(file.split("_")[0]+".root")
-                filesToRemove.append(file.split("_")[0]+"_inLHE.root")
-                
-            elif k == "premix" and "_1_" not in file:
-                filesToRemove.append(file.split("_")[0]+".root")
-                filesToRemove.append(file.split("_")[0]+"_0.root")
-            elif k == "miniAOD":
-                filesToRemove.append(file.split("_")[0]+".root")
-        wrapper += "\n\n"
-    wrapper += "rm {}\n".format(" ".join(filesToRemove))
-    wrapper += "rm -rf {} *py\n".format(openCMSSW)
-    wrapper += "date\n"
 
-    with open("output/{}/wrapper.sh".format(name), "w") as file:
-        file.write(wrapper)
+        with open("output/{}/wrapper.sh".format(name), "w") as file:
+            file.write(wrapper)
 
-
-
-    process = subprocess.Popen("chmod +x output/{}/wrapper.sh".format(name), shell=True)
-    process.wait()
-    if (doBatch==1):
-        process = subprocess.Popen('cd output/{}; condor_submit submit.jdl; cd -'.format(name), shell=True)
+        process = subprocess.Popen("chmod +x output/{}/wrapper.sh".format(name), shell=True)
         process.wait()
+        if (doBatch==1):
+            process = subprocess.Popen('cd output/{}; condor_submit submit.jdl; cd -'.format(name), shell=True)
+            process.wait()
+    else:
+        print "FIXMEEEEEEEEEEE"
+        sys.exit()
 
 def helperJsonParse(Samples, sample):
     params = []
