@@ -109,7 +109,6 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
          jdl += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
          jdl += 'Requirements = HasSingularity \n'
     jdl += "Executable = wrapper.sh\n"
-    jdl += "arguments = $(proc) {}\n".format(events)
     jdl += "request_cpus = 8 \n"
     jdl += "should_transfer_files = YES\n"
     jdl += "Error = log/$(proc).err_$(Step)\n"
@@ -118,10 +117,11 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     jdl += "Proxy_filename = x509up\n"
     username = getpass.getuser()
     jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
-    jdl += "arguments = $(Proxy_path)\n"
+    jdl += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
     jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
     jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
     jdl += "when_to_transfer_output = ON_EXIT\n"
+    jdl += "+JobFlavour = \"tomorrow\"\n"
     jdl += "Queue {} proc in ({})\n".format(jobs, name)
 
     with open("output/{}/submit.jdl".format(name), "w") as file:
@@ -132,7 +132,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     wrapper += 'echo "Starting job on " `date` #Date/time of start of job\n'
     wrapper += 'echo "Running on: `uname -a`" #Condor job is running on this node\n'
     wrapper += 'echo "System software: `cat /etc/redhat-release`" #Operating System on that node\n'
-    wrapper += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'
+    wrapper += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'    
+    wrapper += 'export X509_USER_PROXY=$1\n'
+    wrapper += 'voms-proxy-info -all\n'
+    wrapper += 'voms-proxy-info -all -file $1\n'
 
     openCMSSW = ""
     
