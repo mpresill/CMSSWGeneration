@@ -29,18 +29,24 @@ def download(year,path, link, run=True):
     process = subprocess.Popen("chmod +x {}".format(pathToFile),shell=True)
     process.wait()
     if run:
-        if year == '2016':
-            sobstituteMiniAOD = '/WplusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIISummer16MiniAODv3-PUMoriond17_94X_mcRun2_asymptotic_v3-v1/MINIAODSIM'
-        elif year == '2017':
-            sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
-        elif year == '2018':
-            sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
-        else:
-            print " unknown year ",year
-            sys.exit()
-        print " set sobstituteMiniAOD to ",sobstituteMiniAOD
         #the first sed is needed because these production fails if not run in slc6 but the Download script doesn't work there. The second sed it is needed if there is no proper request for a sample. In that case you need to check what is going as filein when producing the nanoAOD and change it here
-        process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:{}\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, fileName, sobstituteMiniAOD, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
+        if 'lhe' in path:
+            process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS=100/" {} ; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, fileName, fileName, fileName),shell=True)
+        elif 'nanoAOD' in path:
+            if year == '2016':
+                sobstituteMiniAOD = '/WplusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIISummer16MiniAODv3-PUMoriond17_94X_mcRun2_asymptotic_v3-v1/MINIAODSIM'
+            elif year == '2017':
+                sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
+            elif year == '2018':
+                sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
+            else:
+                print " unknown year ",year
+                sys.exit()
+            print " set sobstituteMiniAOD to ",sobstituteMiniAOD
+            process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:{}\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, fileName, sobstituteMiniAOD, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
+        else:
+            process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, fileName, fileName),shell=True)
+            
         process.wait()
         fs = glob.glob(path+"/*.py")
         print()
@@ -60,8 +66,8 @@ def download(year,path, link, run=True):
         if len(fs)==1:
             name = {"release": fs[0].split("/")[-1], "filename": name}
         print("\n\nDeleting folder\n\n")
-        process = subprocess.Popen("rm -r {}".format(path),shell=True)
-        process.wait()
+        #process = subprocess.Popen("rm -r {}".format(path),shell=True)
+        #process.wait()
         return scram,name
     return scram,""
 
