@@ -29,7 +29,6 @@ def download(year,path, link, run=True):
     process = subprocess.Popen("chmod +x {}".format(pathToFile),shell=True)
     process.wait()
     if run:
-        #the first sed is needed because these production fails if not run in slc6 but the Download script doesn't work there. The second sed it is needed if there is no proper request for a sample. In that case you need to check what is going as filein when producing the nanoAOD and change it here
         if 'lhe' in path:
             process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS=100/" {} ; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, fileName, fileName, fileName),shell=True)
         elif 'nanoAOD' in path:
@@ -66,8 +65,8 @@ def download(year,path, link, run=True):
         if len(fs)==1:
             name = {"release": fs[0].split("/")[-1], "filename": name}
         print("\n\nDeleting folder\n\n")
-        #process = subprocess.Popen("rm -r {}".format(path),shell=True)
-        #process.wait()
+        process = subprocess.Popen("rm -r {}".format(path),shell=True)
+        process.wait()
         return scram,name
     return scram,""
 
