@@ -9,7 +9,11 @@ Install this repo: ```git clone https://github.com/IreneZoi/CMSSWGeneration.git`
 ```
 cd CMSSWGeneration/generation
 voms-proxy-init -voms cms -rfc --valid 168:0
+cp /tmp/x509up_XXXX /afs/cern.ch/user/U/USERNAME/private/x509up
 ```
+NB: in the command above you need to change ```USERNAME``` & ```U``` based on your cern username.
+
+
 ## Download the correct CMSSW, architecture & config file for each year/step:
 
    * First put the correct flowlinks & links in Steps.json based on the request you are working with (in the example https://cms-pdmv.cern.ch/mcm/requests?page=0&dataset_name=WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8&shown=127 )
