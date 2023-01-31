@@ -6,6 +6,7 @@ import subprocess
 from random import randint
 import glob
 import shutil
+import getpass
 
 def create_CMSSW_tar(release, scram):
     print " --------------- release ",release," scram ",scram
@@ -53,10 +54,15 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     scrams = []
     # print(Steps[year].keys())
     for k in totalSteps:
-        cmssws.append(Steps[year][k]['release'])
-        scrams.append(Steps[year][k]['SCRAM_ARCH'])
-    cmssws.append('CMSSW_10_2_22')
-    scrams.append('slc7_amd64_gcc700')
+        if k != 'nanoAOD':
+            cmssws.append(Steps[year][k]['release'])
+            scrams.append(Steps[year][k]['SCRAM_ARCH'])
+        else:
+            print " now doing nanoAOD because k is ",k    
+            Steps[year][k]['release'] = 'CMSSW_10_2_22'
+            Steps[year][k]['SCRAM_ARCH'] = 'slc7_amd64_gcc700'
+            cmssws.append(Steps[year][k]['release'])
+            scrams.append(Steps[year][k]['SCRAM_ARCH'])
     print cmssws[0],cmssws[-1]
     print scrams[0],scrams[-1]
     print cmssws
@@ -99,7 +105,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
 
     jdl = "Universe = vanilla \n"
-    if 'slc6' in Steps[year][k]['SCRAM_ARCH']:
+    if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
          jdl += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
          jdl += 'Requirements = HasSingularity \n'
     jdl += "Executable = wrapper.sh\n"
@@ -109,7 +115,11 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     jdl += "Error = log/$(proc).err_$(Step)\n"
     jdl += "Output = log/$(proc).out_$(Step)\n"
     jdl += "Log = log/$(proc).log\n"
-    jdl += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))
+    jdl += "Proxy_filename = x509up\n"
+    username = getpass.getuser()
+    jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
+    jdl += "arguments = $(Proxy_path)\n"
+    jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
     jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
     jdl += "when_to_transfer_output = ON_EXIT\n"
     jdl += "Queue {} proc in ({})\n".format(jobs, name)
@@ -260,8 +270,8 @@ if __name__ == "__main__":
         parser.add_argument("-gp","--gridpack", help="Path to gridpack", required=True)
         parser.add_argument("-r","--removeOldRoot", help="Option to remove intermediate root files (inLHE, miniAOD...), default = True", default=True)
         parser.add_argument("-dr","--dipoleRecoil", help="Whether to use dipole recoil in pythia, default = True", default=True)
-        parser.add_argument("-e","--events", help="Number of events per file", default=2500)
-        parser.add_argument("-j","--jobs", help="Number of jobs", default=400)
+        parser.add_argument("-e","--events", help="Number of events per file", default=100)
+        parser.add_argument("-j","--jobs", help="Number of jobs", default=4)
         parser.add_argument("-b","--doBatch", help="Wheter to submit or not (--doBatch=1)", default=0)
         args = parser.parse_args(argsT)
         generate(args.name, args.year, args.gridpack, args.removeOldRoot, args.dipoleRecoil, args.events, args.jobs, args.doBatch)
