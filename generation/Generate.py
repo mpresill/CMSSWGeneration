@@ -235,7 +235,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
              jdl_slc6 += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
              jdl_slc6 += 'Requirements = HasSingularity \n'
-        jdl_slc6 += "Executable = wrapper.sh\n"
+        jdl_slc6 += "Executable = wrapper_slc6.sh\n"
         jdl_slc6 += "request_cpus = 8 \n"
         jdl_slc6 += "should_transfer_files = YES\n"
         jdl_slc6 += "Error = log/$(proc).err_$(Step)\n"
