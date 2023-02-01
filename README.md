@@ -33,6 +33,7 @@ python Generate.py -n MYOUTPUTDIR -y 2016 -gp /cvmfs/cms.cern.ch/phys_generator/
 cd outputdir/MYOUTPUTDIR
 condor_submit submit.jdl
 ```
+If there are multiple `jdl` files it means that the steps before the nanoAOD one need the `slc6` singularity. Submit first `submit_slc6.jdl` and when it is over the `submit.jdl`.
 
 NB: It is a work in progress!!!
 
