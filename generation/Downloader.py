@@ -33,7 +33,8 @@ def download(path, link, run=True):
     process = subprocess.Popen("chmod +x {}".format(pathToFile),shell=True)
     process.wait()
     if run:
-        process = subprocess.Popen("cd {}; ./{}; cd -".format(path, fileName),shell=True)
+        # the `sed -i "s/|| exit \$?/ /"` is needed because otherwise the premix step is not working properly and the second config file is not created
+        process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, fileName, fileName),shell=True)
         process.wait()
         fs = glob.glob(path+"/*.py")
         print()
