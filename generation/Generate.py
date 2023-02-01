@@ -54,7 +54,7 @@ def create_CMSSW_tar(release, singularity):
         process = subprocess.Popen("chmod +x {}; ./{}; rm {}".format(nameTmpScript,nameTmpScript,nameTmpScript), shell=True)
         process.wait()
 
-def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, doBatch, eos_out_path):
+def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, doBatch, eos_out_path=""):
     with open("Steps.json") as file:
         Steps = json.load(file) 
     gridpack = os.path.expanduser(gridpack)
@@ -75,17 +75,24 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     # scrams = []
     # print(Steps[year].keys())
     for k in totalSteps:
-        cmssws.append(Steps[year][k]['release'])
+        if k != 'nanoAOD':
+            cmssws.append(Steps[year][k]['release'])
+        else:
+            print " now doing nanoAOD because k is ",k    
+            Steps[year][k]['release'] = 'CMSSW_10_2_22'
+            cmssws.append(Steps[year][k]['release'])
+
         if "singularity" in Steps[year][k]:
             singularities.append(Steps[year][k]['singularity'])
         else:
             singularities.append(False)
-    cmssws = list(set(cmssws))
-    # print(cmssws)
+    #cmssws = list(set(cmssws))
+    #print(cmssws)
 
     for i in range(len(cmssws)):
         cmssw = cmssws[i]
         singularity = singularities[i]
+        print " cmssw ",cmssw," singularity ",singularity
         if not os.path.isfile("data/CMSSWs/{}.tgz".format(cmssw)):
             print("Should create CMSSW tgz for release {}".format(cmssw))
             create_CMSSW_tar(cmssw, singularity)
