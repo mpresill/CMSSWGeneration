@@ -217,13 +217,13 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             process = subprocess.Popen('cd output/{}; condor_submit submit.jdl; cd -'.format(name), shell=True)
             process.wait()
     else: # below implementation for different os
-        # config for lhe, premix and miniAOD with slc6
+        print "********    config for lhe, premix and miniAOD with slc6"
         fileToTransfer = [os.path.abspath(gridpack)]
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
-        inputsCfg = [ x for x in inputsCfg if "Nano" not in x ]
-        fileToTransfer.extend(inputsCfg)
-        print " inputsCfg ",inputsCfg
+        inputsCfg_slc6 = [ x for x in inputsCfg if "Nano" not in x ]
+        fileToTransfer.extend(inputsCfg_slc6)
+        print " inputsCfg_slc6 ",inputsCfg_slc6
         print " year ",year
         print glob.glob("data/input_{}/*Mini*.py".format(year))
         outputFile = glob.glob("data/input_{}/*Mini*.py".format(year))[0].split("/")[-1].split("_1_")[0]
@@ -273,7 +273,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         filesToRemove = [gridpack.split("/")[-1]]
         for k in totalSteps_slc6:
             wrapper_slc6 += "#Working on {} step\n\n".format(k)
-            file = list(filter(lambda j: k.lower() in j.lower(), inputsCfg))[0].split("/")[-1]
+            file = list(filter(lambda j: k.lower() in j.lower(), inputsCfg_slc6))[0].split("/")[-1]
             if k == "premix":
                 if not donePremixFirst:
                     if "_2_" in file:
@@ -337,14 +337,14 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             process = subprocess.Popen('cd output/{}; condor_submit submit_slc6.jdl; cd -'.format(name), shell=True)
             process.wait()
             
-        # config for nanoAOD with slc7
+        print "********    config for nanoAOD with slc7"
         miniAOD = os.path.abspath('output/{}/root/{}.root'.format(name,outputFile))
         fileToTransfer = [miniAOD]
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
-        inputsCfg = inputsCfg[-1]
-        fileToTransfer.append(inputsCfg)
-        print " inputsCfg ",inputsCfg
+        inputsCfg_slc7 = [ x for x in inputsCfg if "Nano" in x ]
+        fileToTransfer.extend(inputsCfg_slc7)
+        print " inputsCfg_slc7 ",inputsCfg_slc7
         print " year ",year
         print glob.glob("data/input_{}/*Nano*.py".format(year))
         outputFile = glob.glob("data/input_{}/*Nano*.py".format(year))[0].split("/")[-1].split("_1_")[0]
@@ -388,7 +388,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         #print " --------------- commented premix!!!!! ------------------ "
         filesToRemove = [miniAOD.split("/")[-1]]
         wrapper += "#Working on {} step\n\n".format(k)
-        file = inputsCfg.split("/")[-1]
+        file = inputsCfg_slc7[0].split("/")[-1]
         if Steps[year][k]['release'] != openCMSSW:
             if openCMSSW != "":
                 wrapper += "rm -rf {} \n".format(openCMSSW)
