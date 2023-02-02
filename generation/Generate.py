@@ -118,8 +118,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     outputFile = glob.glob("data/input_{}/*Nano*.py".format(year))[0].split("/")[-1].split("_1_")[0]
     for cmssw in cmssws:
         fileToTransfer.append(os.path.abspath(glob.glob("data/CMSSWs/{}.tgz".format(cmssw))[0]))
-     
-    if doBatch == 1:
+    print " do batch ", doBatch
+    if doBatch==True:
+        print " ------- baaaaatch!!!!!"
         jdl = "Universe = vanilla \n"
         jdl += "Executable = wrapper.sh\n"
         if eos_out_path != "":
@@ -143,6 +144,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         with open("output/{}/submit.jdl".format(name), "w") as file:
             file.write(jdl)
     else:
+        print "else do batch ", doBatch
         workdir = "output/{}/workdir".format(name)
         os.makedirs(workdir)
         jdl = "#!/bin/bash\n"
@@ -192,7 +194,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += "sed -i 's#^.*input[^=]*=[^=]*cms.untracked.int32.*$#    input = cms.untracked.int32({})#g' -i {}\n".format(events, file)
             wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
             wrapper += 'sed -i "s/^process.RandomNumberGeneratorService.externalLHEProducer.initialSeed.*$/process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int($(($1+1)))/g" -i {} \n'.format(file)
-            if dipoleRecoil:
+            if dipoleRecoil==True:
                 wrapper += "sed -i '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' -i {}\n".format(file)
           
         if Steps[year][k]['release'] != openCMSSW:
@@ -236,7 +238,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
     process = subprocess.Popen("chmod +x output/{}/wrapper.sh".format(name), shell=True)
     process.wait()
-    if (doBatch==1):
+    if (doBatch==True):
         process = subprocess.Popen('cd output/{}; condor_submit submit.jdl; cd -'.format(name), shell=True)
         process.wait()
 
@@ -247,7 +249,7 @@ def helperJsonParse(Samples, sample):
         "dipoleRecoil": True,
         "events": 2500,
         "jobs": 400,
-        "doBatch": 0,
+        "doBatch": False,
         "eosPath": "",
     }
     if not sample in Samples.keys():
@@ -305,8 +307,8 @@ if __name__ == "__main__":
         parser.add_argument("-gp","--gridpack", help="Path to gridpack", required=True)
         parser.add_argument("-r","--removeOldRoot", help="Option to remove intermediate root files (inLHE, miniAOD...), default = True", default=True)
         parser.add_argument("-dr","--dipoleRecoil", help="Whether to use dipole recoil in pythia, default = True", default=True)
-        parser.add_argument("-e","--events", help="Number of events per file", default=2500)
-        parser.add_argument("-j","--jobs", help="Number of jobs", default=400)
-        parser.add_argument("-b","--doBatch", help="Wheter to submit or not (--doBatch=1)", default=0)
+        parser.add_argument("-e","--events", help="Number of events per file", default=100)
+        parser.add_argument("-j","--jobs", help="Number of jobs", default=5)
+        parser.add_argument("-b","--doBatch", help="Wheter to submit or not (--doBatch=True)",action='store_true')
         args = parser.parse_args(argsT)
         generate(args.name, args.year, args.gridpack, args.removeOldRoot, args.dipoleRecoil, args.events, args.jobs, args.doBatch)

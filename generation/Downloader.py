@@ -12,7 +12,7 @@ import re
 
         
 
-def download(path, link, run=True):
+def download(year, path, link, run=True, events='100'):
     r = requests.get(link, verify=False)
     if r.status_code!=200:
         print("Bad response from server")
@@ -33,8 +33,21 @@ def download(path, link, run=True):
     process = subprocess.Popen("chmod +x {}".format(pathToFile),shell=True)
     process.wait()
     if run:
-        # the `sed -i "s/|| exit \$?/ /"` is needed because otherwise the premix step is not working properly and the second config file is not created
-        process = subprocess.Popen('cd {}; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, fileName, fileName),shell=True)
+        if 'nanoAOD' in path:
+            if year == '2016':
+                sobstituteMiniAOD = '/WplusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIISummer16MiniAODv3-PUMoriond17_94X_mcRun2_asymptotic_v3-v1/MINIAODSIM'
+            elif year == '2017':
+                sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM'
+            elif year == '2018':
+                sobstituteMiniAOD = '/WminusToLNuWminusTo2JJJ_dipoleRecoil_EWK_LO_SM_MJJ100PTJ10_TuneCP5_13TeV-madgraph-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v2/MINIAODSIM'
+            else:
+                print " unknown year ",year
+                sys.exit()
+            print " set sobstituteMiniAOD to ",sobstituteMiniAOD
+            process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS={}/" {} ; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:{}\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, events, fileName, fileName, sobstituteMiniAOD, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
+        else:
+            process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS={}/" {} ; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, events, fileName, fileName, fileName),shell=True)
+            # the `sed -i "s/|| exit \$?/ /"` is needed because otherwise the premix step is not working properly and the second config file is not created
         process.wait()
         fs = glob.glob(path+"/*.py")
         print()
@@ -66,7 +79,8 @@ if __name__ == "__main__":
     parser.add_argument("-y","--year", help="Year" , required=True)
     parser.add_argument("-s","--steps", help="Step to download", nargs="+", required=True)
     parser.add_argument("-f","--fix", help="If true fixes input and output file names of year specified, you should first have created files for the entire flow" , nargs='?', type=int, const=0, default=0)
-
+    toRun=True
+    Events='100'
 
     args = parser.parse_args()
 
@@ -129,7 +143,7 @@ if __name__ == "__main__":
         print("\n\n")
         for step in args.steps:
             print("\n\nNow dowloading config for step: {} and year: {}\n\n".format(step, args.year))
-            scram,name = download("data/input_{}/{}".format(args.year, step),Steps[args.year][step]['link'])
+            scram,name = download(args.year,"data/input_{}/{}".format(args.year, step),Steps[args.year][step]['link'],toRun,Events)
             print(name)
             if isinstance(name, str) or isinstance(name, list):
                 Steps[args.year][step]['filename'] = name

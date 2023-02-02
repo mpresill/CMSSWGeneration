@@ -23,8 +23,8 @@
         "premix": {
             "SCRAM_ARCH": "slc6_amd64_gcc530", 
             "filename": [
-                "SMP-RunIISummer16DR80Premix-00640_1_cfg.py", 
-                "SMP-RunIISummer16DR80Premix-00640_2_cfg.py"
+                "SMP-RunIISummer16DR80Premix-00640_2_cfg.py", 
+                "SMP-RunIISummer16DR80Premix-00640_1_cfg.py"
             ], 
             "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_test/SMP-RunIISummer16DR80Premix-00640", 
             "release": "CMSSW_8_0_31", 
