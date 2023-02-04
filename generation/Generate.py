@@ -404,7 +404,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         jdl += "Proxy_filename = x509up\n"
         username = getpass.getuser()
         jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
-        jdl += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
+        jdl += "arguments = $(Proxy_path) $(Step) $(proc) {}\n".format(events)
         jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
         jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
         jdl += "when_to_transfer_output = ON_EXIT\n"
