@@ -379,7 +379,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             
         print "********    config for nanoAOD with slc7"
         miniAOD = os.path.abspath('output/{}/root/{}.root'.format(name,outputFile))
-        fileToTransfer = [miniAOD]
+        fileToTransfer = []
+        for i in range(jobs):
+            fileToTransfer.append(miniAOD.replace(".root","_"+str(i)+".root"))
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
         print inputsCfg
@@ -447,7 +449,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             openCMSSW = Steps[year][k]['release']
         filesToRemove.append(file) 
         wrapper += "date\n"
-        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}'.format(miniAOD,miniAOD.replace(".root","_${2}.root"),file)
+        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
