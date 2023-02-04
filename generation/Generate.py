@@ -449,7 +449,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             openCMSSW = Steps[year][k]['release']
         filesToRemove.append(file) 
         wrapper += "date\n"
-        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
+        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
