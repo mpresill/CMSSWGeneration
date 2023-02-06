@@ -380,7 +380,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         print "********    config for nanoAOD with slc7"
         miniAOD = os.path.abspath('output/{}/root/{}.root'.format(name,outputFile))
         fileToTransfer = []
-        for i in range(jobs):
+        for i in range(0,jobs):
             fileToTransfer.append(miniAOD.replace(".root","_"+str(i)+".root"))
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
