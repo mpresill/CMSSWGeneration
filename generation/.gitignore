@@ -1,0 +1,6 @@
+CMSSW_*/*
+CMSSW_*.tgz
+*.out*
+*.err*
+*.mk
+output/*
