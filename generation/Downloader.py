@@ -44,7 +44,8 @@ def download(year, path, link, run=True, events='100'):
                 print " unknown year ",year
                 sys.exit()
             print " set sobstituteMiniAOD to ",sobstituteMiniAOD
-            process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS={}/" {} ; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:{}\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, events, fileName, fileName, sobstituteMiniAOD, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
+            #for some reason, the request I am using produces NANOEDMAOD and not NANOAOD so more substitions are needed
+            process = subprocess.Popen('cd {}; sed -i "s/NANOEDMAOD/NANOAOD/" {} ; sed -i "s/EVENTS=.*$/EVENTS={}/" {} ; sed -i "s/|| exit \$?/ /" {}; sed -i "s|\"dbs:{}\"|\"file:{}\"|" {} ; ./{}; cd -'.format(path, fileName, events, fileName, fileName, sobstituteMiniAOD, Steps[args.year]['miniAOD']['filename'].replace('_1_cfg.py','.root'), fileName,fileName),shell=True)
         else:
             process = subprocess.Popen('cd {}; sed -i "s/EVENTS=.*$/EVENTS={}/" {} ; sed -i "s/|| exit \$?/ /" {}; ./{}; cd -'.format(path, events, fileName, fileName, fileName),shell=True)
             # the `sed -i "s/|| exit \$?/ /"` is needed because otherwise the premix step is not working properly and the second config file is not created
