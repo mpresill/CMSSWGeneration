@@ -17,7 +17,7 @@ if len(argv)<2:
     print("Should specify output folder for which to resubmit jobs")
     sys.exit(1) 
 
-folder = argv[1]
+folder = argv[1].replace("/","")
 jdlfile = ""
 try:
     jdlfile = argv[2]
