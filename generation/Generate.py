@@ -25,11 +25,17 @@ def create_CMSSW_tar(release, singularity):
         rm -rf {}
         """.format(release, release, release, release, release)
         nameTmpScript = "script_{}.sh".format(randint(100000,900000))
-        with open(nameTmpScript, "w") as file:
+        fileToOpen = nameTmpScript
+        pathToFile = "$(echo $(pwd)/{})".format(nameTmpScript)
+        username = getpass.getuser()
+        if "fnal" in os.uname()[1]:
+            pathToFile = "/uscms/home/{}/{}/".format(username,nameTmpScript)
+            fileToOpen = pathToFile
+        with open(fileToOpen, "w") as file:
             file.write(dedent(script))
-        process = subprocess.Popen("chmod +x {}; cmssw-env --cmsos slc6 --command-to-run  $(echo $(pwd)/{}); rm {}".format(nameTmpScript,nameTmpScript,nameTmpScript), shell=True)
+        process = subprocess.Popen("chmod +x {}; cmssw-env --cmsos slc6 --command-to-run  {}; rm {}".format(nameTmpScript,pathToFile,pathToFile), shell=True)
         process.wait()
-        
+        os.system("cp {}.tgz $(echo $(pwd)/data/CMSSWs/)")
     else:
         script  = "#!/bin/bash\n"
         # script += "export SCRAM_ARCH={} \n".format(scram)
@@ -280,11 +286,19 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         jdl_slc6 += "Error = log/$(proc).err_$(Cluster)_$(Step)\n"
         jdl_slc6 += "Output = log/$(proc).out_$(Cluster)_$(Step)\n"
         jdl_slc6 += "Log = log/$(Cluster)_$(proc).log\n"
-        jdl_slc6 += "Proxy_filename = x509up\n"
-        username = getpass.getuser()
-        jdl_slc6 += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
-        jdl_slc6 += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
-        jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
+        if "cern" in os.uname()[1]:
+            jdl_slc6 += "Proxy_filename = x509up\n"
+            username = getpass.getuser()
+            jdl_slc6 += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
+            jdl_slc6 += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
+            jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
+        elif "fnal" in os.uname()[1]:
+            jdl_slc6 += "x509userproxy = ${X509_USER_PROXY}"
+            jdl_slc6 += "arguments = $(proc) {}\n".format(events)
+            jdl_slc6 += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))
+        else:
+            print ("didn't check job submission for this SITE ",os.uname()[1])
+            sys.exit()                 
         jdl_slc6 += 'transfer_output_remaps = "{}.root = {}/{}_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)),outputFile)
         jdl_slc6 += "when_to_transfer_output = ON_EXIT\n"
         jdl_slc6 += "+JobFlavour = \"tomorrow\"\n"
@@ -298,10 +312,11 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         wrapper_slc6 += 'echo "Starting job on " `date` #Date/time of start of job\n'
         wrapper_slc6 += 'echo "Running on: `uname -a`" #Condor job is running on this node\n'
         wrapper_slc6 += 'echo "System software: `cat /etc/redhat-release`" #Operating System on that node\n'
-        wrapper_slc6 += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'    
-        wrapper_slc6 += 'export X509_USER_PROXY=$1\n'
-        wrapper_slc6 += 'voms-proxy-info -all\n'
-        wrapper_slc6 += 'voms-proxy-info -all -file $1\n'
+        wrapper_slc6 += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'  
+        if "cern" in os.uname()[1]:  
+            wrapper_slc6 += 'export X509_USER_PROXY=$1\n'
+            wrapper_slc6 += 'voms-proxy-info -all\n'
+            wrapper_slc6 += 'voms-proxy-info -all -file $1\n'
 
         openCMSSW = ""
 
