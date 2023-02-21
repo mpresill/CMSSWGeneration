@@ -29,13 +29,13 @@ def create_CMSSW_tar(release, singularity):
         pathToFile = "$(echo $(pwd)/{})".format(nameTmpScript)
         username = getpass.getuser()
         if "fnal" in os.uname()[1]:
-            pathToFile = "/uscms/home/{}/{}/".format(username,nameTmpScript)
+            pathToFile = "/uscms/home/{}/{}".format(username,nameTmpScript)
             fileToOpen = pathToFile
         with open(fileToOpen, "w") as file:
             file.write(dedent(script))
-        process = subprocess.Popen("chmod +x {}; cmssw-env --cmsos slc6 --command-to-run  {}; rm {}".format(nameTmpScript,pathToFile,pathToFile), shell=True)
+        process = subprocess.Popen("chmod +x {}; cmssw-env --cmsos slc6 --command-to-run  {}; rm {}".format(pathToFile,pathToFile,pathToFile), shell=True)
         process.wait()
-        os.system("cp {}.tgz $(echo $(pwd)/data/CMSSWs/)")
+        os.system("cp {}.tgz $(echo $(pwd)/data/CMSSWs/)".format(release))
     else:
         script  = "#!/bin/bash\n"
         # script += "export SCRAM_ARCH={} \n".format(scram)
@@ -83,6 +83,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
     # print(Steps[year].keys())
     for k in totalSteps:
         if k != 'nanoAOD':
+            print " now doing step ",k
             cmssws.append(Steps[year][k]['release'])
             scrams.append(Steps[year][k]['SCRAM_ARCH'])
         else:
