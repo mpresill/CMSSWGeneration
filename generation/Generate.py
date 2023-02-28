@@ -35,7 +35,8 @@ def create_CMSSW_tar(release, singularity):
             file.write(dedent(script))
         process = subprocess.Popen("chmod +x {}; cmssw-env --cmsos slc6 --command-to-run  {}; rm {}".format(pathToFile,pathToFile,pathToFile), shell=True)
         process.wait()
-        os.system("cp {}.tgz $(echo $(pwd)/data/CMSSWs/)".format(release))
+        if "fnal" in os.uname()[1]:
+            os.system("cp /uscms/home/{}/{}.tgz $(echo $(pwd)/data/CMSSWs/)".format(username,release))
     else:
         script  = "#!/bin/bash\n"
         # script += "export SCRAM_ARCH={} \n".format(scram)
@@ -119,10 +120,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         same_os = True
         print "ALL CMSSWs need slc7"
     else: 
-        print " SOME CMSSWs need slc7 and some slc6!!! need to fix it!!!!"
+        print " SOME CMSSWs need slc7 and some slc6!!!"
         scrams_slc6 = scrams[:-1] #nanoAOD is the last step. Checking if without that all other CMSSWs need slc6
         if all('slc6' in item for item in scrams_slc6):
-            print " only the nano step needs slc7, fixing it!!!"
+            print " only the nano step needs slc7"
         else:
             print " NOT only the nano step needs slc7 -> not fixing this!!"
             sys.exit()
@@ -264,7 +265,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             process.wait()
     else: # below implementation for different os
         print "********    config for lhe, premix and miniAOD with slc6"
-        fileToTransfer = [os.path.abspath(gridpack)]
+        fileToTransfer = [] #[os.path.abspath(gridpack)]
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
         inputsCfg_slc6 = [ x for x in inputsCfg if "Nano" not in x ]
@@ -279,30 +280,30 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
         jdl_slc6 = "Universe = vanilla \n"
         if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
-             jdl_slc6 += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
-             jdl_slc6 += 'Requirements = HasSingularity \n'
+            jdl_slc6 += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
+            if "fnal" not in os.uname()[1]:
+                jdl_slc6 += 'Requirements = HasSingularity \n'
         jdl_slc6 += "Executable = wrapper_slc6.sh\n"
-        jdl_slc6 += "request_cpus = 8 \n"
+        if "fnal" not in os.uname()[1]: jdl_slc6 += "request_cpus = 8 \n"
         jdl_slc6 += "should_transfer_files = YES\n"
         jdl_slc6 += "Error = log/$(proc).err_$(Cluster)_$(Step)\n"
         jdl_slc6 += "Output = log/$(proc).out_$(Cluster)_$(Step)\n"
         jdl_slc6 += "Log = log/$(Cluster)_$(proc).log\n"
+        username = getpass.getuser()
         if "cern" in os.uname()[1]:
             jdl_slc6 += "Proxy_filename = x509up\n"
-            username = getpass.getuser()
             jdl_slc6 += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
             jdl_slc6 += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
-            jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
+            jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))    
         elif "fnal" in os.uname()[1]:
-            jdl_slc6 += "x509userproxy = ${X509_USER_PROXY}"
             jdl_slc6 += "arguments = $(proc) {}\n".format(events)
-            jdl_slc6 += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))
+            jdl_slc6 += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))                    
         else:
             print ("didn't check job submission for this SITE ",os.uname()[1])
-            sys.exit()                 
+            sys.exit()     
         jdl_slc6 += 'transfer_output_remaps = "{}.root = {}/{}_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)),outputFile)
         jdl_slc6 += "when_to_transfer_output = ON_EXIT\n"
-        jdl_slc6 += "+JobFlavour = \"tomorrow\"\n"
+        if "fnal" not in os.uname()[1]: jdl_slc6 += "+JobFlavour = \"tomorrow\"\n"
         jdl_slc6 += "Queue {} proc in ({})\n".format(jobs, name)
 
         with open("output/{}/submit_slc6.jdl".format(name), "w") as file:
@@ -412,19 +413,27 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
         jdl = "Universe = vanilla \n"
         jdl += "Executable = wrapper.sh\n"
-        jdl += "request_cpus = 8 \n"
+        if "fnal" not in os.uname()[1]:     jdl += "request_cpus = 8 \n"
         jdl += "should_transfer_files = YES\n"
         jdl += "Error = log/$(Cluster)_$(proc).err_$(Step)\n"
         jdl += "Output = log/$(Cluster)_$(proc).out_$(Step)\n"
         jdl += "Log = log$(Cluster)_/$(proc).log\n"
-        jdl += "Proxy_filename = x509up\n"
         username = getpass.getuser()
-        jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
-        jdl += "arguments = $(Proxy_path) $(Step) $(proc) {}\n".format(events)
-        jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))
+        if "cern" in os.uname()[1]:
+            jdl += "Proxy_filename = x509up\n"
+            jdl += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
+            jdl += "arguments = $(Proxy_path) $(Step) $(proc) {}\n".format(events)
+            jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))    
+        elif "fnal" in os.uname()[1]:
+            jdl += "arguments = $(Step) $(proc) {}\n".format(events)
+            jdl += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))                    
+        else:
+            print ("didn't check job submission for this SITE ",os.uname()[1])
+            sys.exit()     
+
         jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
         jdl += "when_to_transfer_output = ON_EXIT\n"
-        jdl += "+JobFlavour = \"tomorrow\"\n"
+        if "fnal" not in os.uname()[1]: jdl += "+JobFlavour = \"tomorrow\"\n"
         jdl += "Queue {} proc in ({})\n".format(jobs, name)
 
         with open("output/{}/submit.jdl".format(name), "w") as file:
@@ -436,9 +445,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         wrapper += 'echo "Running on: `uname -a`" #Condor job is running on this node\n'
         wrapper += 'echo "System software: `cat /etc/redhat-release`" #Operating System on that node\n'
         wrapper += 'source /cvmfs/cms.cern.ch/cmsset_default.sh\n'    
-        wrapper += 'export X509_USER_PROXY=$1\n'
-        wrapper += 'voms-proxy-info -all\n'
-        wrapper += 'voms-proxy-info -all -file $1\n'
+        if "cern" in os.uname()[1]:
+            wrapper += 'export X509_USER_PROXY=$1\n'
+            wrapper += 'voms-proxy-info -all\n'
+            wrapper += 'voms-proxy-info -all -file $1\n'
 
         openCMSSW = ""
 
@@ -465,7 +475,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             openCMSSW = Steps[year][k]['release']
         filesToRemove.append(file) 
         wrapper += "date\n"
-        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
+        arguments = 2
+        if "fnal" in os.uname()[1]: arguments=1
+        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${"+str(arguments)+"}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
