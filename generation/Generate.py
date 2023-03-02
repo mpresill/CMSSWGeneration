@@ -300,10 +300,11 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             jdl_slc6 += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))                    
         else:
             print ("didn't check job submission for this SITE ",os.uname()[1])
-            sys.exit()     
-        jdl_slc6 += 'transfer_output_remaps = "{}.root = {}/{}_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)),outputFile)
-        jdl_slc6 += "when_to_transfer_output = ON_EXIT\n"
-        if "fnal" not in os.uname()[1]: jdl_slc6 += "+JobFlavour = \"tomorrow\"\n"
+            sys.exit()
+        if "fnal" not in os.uname()[1]:         
+            jdl_slc6 += 'transfer_output_remaps = "{}.root = {}/{}_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)),outputFile)
+            jdl_slc6 += "when_to_transfer_output = ON_EXIT\n"
+            jdl_slc6 += "+JobFlavour = \"tomorrow\"\n"
         jdl_slc6 += "Queue {} proc in ({})\n".format(jobs, name)
 
         with open("output/{}/submit_slc6.jdl".format(name), "w") as file:
@@ -319,7 +320,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += 'export X509_USER_PROXY=$1\n'
             wrapper_slc6 += 'voms-proxy-info -all\n'
             wrapper_slc6 += 'voms-proxy-info -all -file $1\n'
-
+        if "fnal" in os.uname()[1]: wrapper_slc6 += 'eosmkdir {}/{}\n'.format(eos_out_path,name)
         openCMSSW = ""
 
         donePremixFirst = False
@@ -370,6 +371,16 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                 #     wrapper += "sed '/^.*pythia8CP5Settings[^=]*=.*/i \ \ \ \ \ \ \ \ processParameters = cms.vstring(\"SpaceShower:dipoleRecoil = on\"),' {} -i\n".format(file)
             wrapper_slc6 += "date\n"
             wrapper_slc6 += "cmsRun {}\n".format(file)
+            if "fnal" in os.uname()[1]:
+                if k == "lhe":
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,file.split("_")[0]+"_${2}_inLHE.root")
+                elif k == "premix" and "_1_" not in file:
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,file.split("_")[0]+"_${2}_0.root")
+                elif k == "miniAOD": 
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
+
             if removeOldRoot:
                 if k == "lhe":
                     filesToRemove.append(file.split("_")[0]+".root")
@@ -377,8 +388,8 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                 elif k == "premix" and "_1_" not in file:
                     filesToRemove.append(file.split("_")[0]+".root")
                     filesToRemove.append(file.split("_")[0]+"_0.root")
-                # elif k == "miniAOD": # now we want to keep the miniAOD!!!!
-                #     filesToRemove.append(file.split("_")[0]+".root")
+                elif k == "miniAOD" and "fnal" in os.uname()[1]: # now we want to keep the miniAOD!!!!
+                    filesToRemove.append(file.split("_")[0]+".root")
             wrapper_slc6 += "\n\n"
             filesToRemove.append(file)    
         wrapper_slc6 += "rm {}\n".format(" ".join(filesToRemove))
@@ -397,8 +408,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         print "********    config for nanoAOD with slc7"
         miniAOD = os.path.abspath('output/{}/root/{}.root'.format(name,outputFile))
         fileToTransfer = []
-        for i in range(0,jobs):
-            fileToTransfer.append(miniAOD.replace(".root","_"+str(i)+".root"))
+        if "fnal" not in os.uname()[1]:
+            for i in range(0,jobs):
+                fileToTransfer.append(miniAOD.replace(".root","_"+str(i)+".root"))
         inputsCfg = glob.glob("data/input_{}/*.py".format(year))
         inputsCfg = list(map(lambda k: os.path.abspath(k), inputsCfg))
         print inputsCfg
@@ -430,10 +442,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         else:
             print ("didn't check job submission for this SITE ",os.uname()[1])
             sys.exit()     
-
-        jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
-        jdl += "when_to_transfer_output = ON_EXIT\n"
-        if "fnal" not in os.uname()[1]: jdl += "+JobFlavour = \"tomorrow\"\n"
+        if "fnal" not in os.uname()[1]:
+            jdl += 'transfer_output_remaps = "{}.root = {}/$(proc)_$(Cluster)_$(Step).root"\n'.format(outputFile, os.path.abspath("output/{}/root".format(name)))
+            jdl += "when_to_transfer_output = ON_EXIT\n"
+            jdl += "+JobFlavour = \"tomorrow\"\n"
         jdl += "Queue {} proc in ({})\n".format(jobs, name)
 
         with open("output/{}/submit.jdl".format(name), "w") as file:
@@ -450,6 +462,8 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += 'voms-proxy-info -all\n'
             wrapper += 'voms-proxy-info -all -file $1\n'
 
+        if "fnal" in os.uname()[1]:
+            wrapper += "xrdcp -f root://cmseos.fnal.gov/{}/{} .".format(eos_out_path,miniAOD.replace(".root","_${1}.root"))
         openCMSSW = ""
 
         k = "nanoAOD"
@@ -479,6 +493,9 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         if "fnal" in os.uname()[1]: arguments=1
         wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${"+str(arguments)+"}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
+        if "fnal" in os.uname()[1]:
+                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path, file.replace("_1_cfg.py","_${2}.root"))
+
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
         wrapper += "rm -rf {} \n".format(openCMSSW)
@@ -561,5 +578,6 @@ if __name__ == "__main__":
         parser.add_argument("-e","--events", help="Number of events per file", default=100)
         parser.add_argument("-j","--jobs", help="Number of jobs", default=5)
         parser.add_argument("-b","--doBatch", help="Wheter to submit or not (--doBatch=True)",action='store_true')
+        parser.add_argument("-o","--outdir", help="Output directory on FNAL EOS, if you are not running on LPC you don't need it",default="")
         args = parser.parse_args(argsT)
-        generate(args.name, args.year, args.gridpack, args.removeOldRoot, args.dipoleRecoil, args.events, args.jobs, args.doBatch)
+        generate(args.name, args.year, args.gridpack, args.removeOldRoot, args.dipoleRecoil, args.events, args.jobs, args.doBatch,args.outdir)
