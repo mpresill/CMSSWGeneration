@@ -296,7 +296,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             jdl_slc6 += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
             jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))    
         elif "fnal" in os.uname()[1]:
-            jdl_slc6 += "arguments = $(proc) {}\n".format(events)
+            jdl_slc6 += "arguments = 1 $(proc) {} $(Step)\n".format(events) # 1 is a dummy to have the same arguments order
             jdl_slc6 += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))                    
         else:
             print ("didn't check job submission for this SITE ",os.uname()[1])
@@ -368,7 +368,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                 print " **** lhe time!!! ",gridpack," ",file
                 #wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
                 wrapper_slc6 += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"{}\"),#' -i {}\n".format(gridpack, file)
-                wrapper_slc6 += 'sed -i "s/^process.RandomNumberGeneratorService.externalLHEProducer.initialSeed.*$/process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int($(($2+1)))/g" -i {} \n'.format(file)
+                wrapper_slc6 += 'sed -i "s/^process.RandomNumberGeneratorService.externalLHEProducer.initialSeed.*$/process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int($(($3+1)))/g" -i {} \n'.format(file)
                 #wrapper += 'sed -i "s/^.*input = .*$/    input = cms.untracked.uint32({})/g" -i {}\n'.format(events, file)
                 #wrapper += 'sed -i "s/nevts:*$/nevts:{}\'),/g" -i {}\n'.format(events, file)
                 #wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
@@ -378,13 +378,13 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += "cmsRun {}\n".format(file)
             if "fnal" in os.uname()[1]:
                 if k == "lhe":
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${1}_inLHE.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${3}_inLHE.root")
                 elif k == "premix" and "_1_" not in file:
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${1}_0.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${3}_0.root")
                 elif k == "miniAOD": 
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
 
             if removeOldRoot:
                 if k == "lhe":
