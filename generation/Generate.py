@@ -320,7 +320,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += 'export X509_USER_PROXY=$1\n'
             wrapper_slc6 += 'voms-proxy-info -all\n'
             wrapper_slc6 += 'voms-proxy-info -all -file $1\n'
-        if "fnal" in os.uname()[1]: wrapper_slc6 += 'eosmkdir {}/{}\n'.format(eos_out_path,name)
+        if "fnal" in os.uname()[1]: os.makedirs('/eos/uscms/{}/{}'.format(eos_out_path,name))
         openCMSSW = ""
 
         donePremixFirst = False
