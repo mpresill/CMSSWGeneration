@@ -320,7 +320,12 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += 'export X509_USER_PROXY=$1\n'
             wrapper_slc6 += 'voms-proxy-info -all\n'
             wrapper_slc6 += 'voms-proxy-info -all -file $1\n'
-        if "fnal" in os.uname()[1]: os.makedirs('/eos/uscms/{}/{}'.format(eos_out_path,name))
+        if "fnal" in os.uname()[1]: 
+            try:
+                os.makedirs('/eos/uscms/{}/{}'.format(eos_out_path,name))
+            except:
+                print("eos target directory already exist!")
+                #sys.exit()    
         openCMSSW = ""
 
         donePremixFirst = False
@@ -373,13 +378,13 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += "cmsRun {}\n".format(file)
             if "fnal" in os.uname()[1]:
                 if k == "lhe":
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,file.split("_")[0]+"_${2}_inLHE.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${1}_inLHE.root")
                 elif k == "premix" and "_1_" not in file:
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,file.split("_")[0]+"_${2}_0.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${1}_0.root")
                 elif k == "miniAOD": 
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,file.split("_")[0]+"_${2}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${1}.root")
 
             if removeOldRoot:
                 if k == "lhe":
