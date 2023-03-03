@@ -368,7 +368,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                 print " **** lhe time!!! ",gridpack," ",file
                 #wrapper += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"./{}\"),#' -i {}\n".format(gridpack.split("/")[-1], file)
                 wrapper_slc6 += "sed -i 's#^.*tarball.tar.xz.*$#    args = cms.vstring(\"{}\"),#' -i {}\n".format(gridpack, file)
-                wrapper_slc6 += 'sed -i "s/^process.RandomNumberGeneratorService.externalLHEProducer.initialSeed.*$/process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int($(($3+1)))/g" -i {} \n'.format(file)
+                wrapper_slc6 += 'sed -i "s/^process.RandomNumberGeneratorService.externalLHEProducer.initialSeed.*$/process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int($(($4+1)))/g" -i {} \n'.format(file)
                 #wrapper += 'sed -i "s/^.*input = .*$/    input = cms.untracked.uint32({})/g" -i {}\n'.format(events, file)
                 #wrapper += 'sed -i "s/nevts:*$/nevts:{}\'),/g" -i {}\n'.format(events, file)
                 #wrapper += 'sed -i "s/^.*nEvents = .*$/    nEvents = cms.untracked.uint32({}),/g" -i {}\n'.format(events, file)
@@ -378,13 +378,13 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper_slc6 += "cmsRun {}\n".format(file)
             if "fnal" in os.uname()[1]:
                 if k == "lhe":
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${3}_inLHE.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${4}_inLHE.root")
                 elif k == "premix" and "_1_" not in file:
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${3}_0.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${4}_0.root")
                 elif k == "miniAOD": 
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${3}.root")
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
 
             if removeOldRoot:
                 if k == "lhe":
@@ -442,7 +442,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             jdl += "arguments = $(Proxy_path) $(Step) $(proc) {}\n".format(events)
             jdl += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))    
         elif "fnal" in os.uname()[1]:
-            jdl += "arguments = $(Step) $(proc) {}\n".format(events)
+            jdl += "arguments = 1 $(Step) $(proc) {}\n".format(events)# 1 is a dummy to have the same arguments order
             jdl += "transfer_input_files = {}\n".format(", ".join(fileToTransfer))                    
         else:
             print ("didn't check job submission for this SITE ",os.uname()[1])
@@ -468,7 +468,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += 'voms-proxy-info -all -file $1\n'
 
         if "fnal" in os.uname()[1]:
-            wrapper += "xrdcp -f root://cmseos.fnal.gov/{}/{} .".format(eos_out_path,miniAOD.replace(".root","_${1}.root"))
+            wrapper += "xrdcp -f root://cmseos.fnal.gov/{}/{}/{} .".format(eos_out_path,name,miniAOD.replace(".root","_${2}.root"))
         openCMSSW = ""
 
         k = "nanoAOD"
@@ -499,7 +499,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${"+str(arguments)+"}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         if "fnal" in os.uname()[1]:
-                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path, file.replace("_1_cfg.py","_${2}.root"))
+                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path,name, file.replace("_1_cfg.py","_${1}.root"))
 
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
