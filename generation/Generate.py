@@ -279,7 +279,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
 
 
         jdl_slc6 = "Universe = vanilla \n"
-        if 'slc6' in Steps[year]['lhe']['SCRAM_ARCH']:
+        if 'singularity' in Steps[year]['lhe'] :
             jdl_slc6 += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel6" \n'
             if "fnal" not in os.uname()[1]:
                 jdl_slc6 += 'Requirements = HasSingularity \n'

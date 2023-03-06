@@ -43,13 +43,15 @@
             "SCRAM_ARCH": "slc6_amd64_gcc630", 
             "filename": "SMP-RunIIFall17wmLHEGS-00271_1_cfg.py", 
             "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/SMP-RunIIFall17wmLHEGS-00271", 
-            "release": "CMSSW_9_3_19"
+            "release": "CMSSW_9_3_19", 
+            "singularity": true
         }, 
         "miniAOD": {
             "SCRAM_ARCH": "slc6_amd64_gcc630", 
             "filename": "SMP-RunIIFall17MiniAODv2-00338_1_cfg.py", 
             "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/SMP-RunIIFall17MiniAODv2-00338", 
-            "release": "CMSSW_9_4_7"
+            "release": "CMSSW_9_4_7", 
+            "singularity": true
         }, 
         "nanoAOD": {
             "SCRAM_ARCH": "slc6_amd64_gcc700", 
@@ -64,7 +66,8 @@
                 "SMP-RunIIFall17DRPremix-00331_2_cfg.py"
             ], 
             "link": "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/SMP-RunIIFall17DRPremix-00331", 
-            "release": "CMSSW_9_4_7"
+            "release": "CMSSW_9_4_7", 
+            "singularity": true
         }, 
         "steps": [
             "lhe", 
