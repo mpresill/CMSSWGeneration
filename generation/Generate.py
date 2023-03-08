@@ -494,12 +494,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             openCMSSW = Steps[year][k]['release']
         filesToRemove.append(file) 
         wrapper += "date\n"
-        arguments = 2
-        if "fnal" in os.uname()[1]: arguments=1
-        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${"+str(arguments)+"}.root"),file)
+        wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         if "fnal" in os.uname()[1]:
-                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path,name, file.replace("_1_cfg.py","_${1}.root"))
+                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path,name, file.replace("_1_cfg.py","_${2}.root"))
 
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
