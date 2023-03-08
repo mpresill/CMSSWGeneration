@@ -411,7 +411,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             process.wait()
             
         print "********    config for nanoAOD with slc7"
-        miniAOD = os.path.abspath('output/{}/root/{}.root'.format(name,outputFile))
+        miniAOD = '{}.root'.format(outputFile)
         fileToTransfer = []
         if "fnal" not in os.uname()[1]:
             for i in range(0,jobs):
@@ -468,12 +468,12 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             wrapper += 'voms-proxy-info -all -file $1\n'
 
         if "fnal" in os.uname()[1]:
-            wrapper += "xrdcp -f root://cmseos.fnal.gov/{}/{}/{} .".format(eos_out_path,name,miniAOD.replace(".root","_${2}.root"))
+            wrapper += "xrdcp -f root://cmseos.fnal.gov/{}/{}/{} .\n".format(eos_out_path,name,miniAOD.replace(".root","_${2}.root"))
         openCMSSW = ""
 
         k = "nanoAOD"
         #print " --------------- commented premix!!!!! ------------------ "
-        filesToRemove = [miniAOD.split("/")[-1]]
+        filesToRemove = [miniAOD.split("/")[-1].replace(".root","_${2}.root")]
         wrapper += "#Working on {} step\n\n".format(k)
         file = inputsCfg_slc7[0].split("/")[-1]
         if Steps[year][k]['release'] != openCMSSW:
