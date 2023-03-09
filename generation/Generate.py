@@ -497,7 +497,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         wrapper += 'sed -i "s|file:{}|file:{}|g" -i {}\n'.format(miniAOD.split("/")[-1],miniAOD.split("/")[-1].replace(".root","_${2}.root"),file)
         wrapper += "cmsRun {}\n".format(file)
         if "fnal" in os.uname()[1]:
-                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path,name, file.replace("_1_cfg.py","_${2}.root"))
+                wrapper += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/NanoAODv7/{}".format(file.replace("_1_cfg.py",".root"),eos_out_path,name, file.replace("_1_cfg.py","_${2}.root"))
 
         wrapper += "\n\n"
         wrapper += "rm {}\n".format(" ".join(filesToRemove))
