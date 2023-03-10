@@ -288,7 +288,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         jdl_slc6 += "should_transfer_files = YES\n"
         jdl_slc6 += "Error = log/$(proc).err_$(Cluster)_$(Step)\n"
         jdl_slc6 += "Output = log/$(proc).out_$(Cluster)_$(Step)\n"
-        jdl_slc6 += "Log = log/$(Cluster)_$(proc).log\n"
+        jdl_slc6 += "Log = log/$(Cluster)_$(proc)_$(Step).log\n"
         username = getpass.getuser()
         if "cern" in os.uname()[1]:
             jdl_slc6 += "Proxy_filename = x509up\n"
@@ -380,9 +380,10 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
                 if k == "lhe":
                     wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
                     wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_inLHE.root",eos_out_path,name,file.split("_")[0]+"_${4}_inLHE.root")
+                elif k == "premix" and "_2_" not in file:
+                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${4}_0.root")
                 elif k == "premix" and "_1_" not in file:
                     wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
-                    wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+"_0.root",eos_out_path,name,file.split("_")[0]+"_${4}_0.root")
                 elif k == "miniAOD": 
                     wrapper_slc6 += "xrdcp -f {} root://cmseos.fnal.gov/{}/{}/{}\n".format(file.split("_")[0]+".root",eos_out_path,name,file.split("_")[0]+"_${4}.root")
 
@@ -434,7 +435,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         jdl += "should_transfer_files = YES\n"
         jdl += "Error = log/$(Cluster)_$(proc).err_$(Step)\n"
         jdl += "Output = log/$(Cluster)_$(proc).out_$(Step)\n"
-        jdl += "Log = log$(Cluster)_/$(proc).log\n"
+        jdl += "Log = log/$(Cluster)_$(proc)_$(Step).log\n"
         username = getpass.getuser()
         if "cern" in os.uname()[1]:
             jdl += "Proxy_filename = x509up\n"
