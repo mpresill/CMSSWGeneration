@@ -294,6 +294,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
             jdl_slc6 += "Proxy_filename = x509up\n"
             jdl_slc6 += "Proxy_path = /afs/cern.ch/user/{}/{}/private/$(Proxy_filename)\n".format(username[0],username)
             jdl_slc6 += "arguments = $(Proxy_path) $(proc) {}\n".format(events)
+            jdl_slc6 += "request_memory = 4000\n" # you may delete this line if you are running on only few events but if running with more than 100 it seems useful (at least at FNAL)
             jdl_slc6 += "transfer_input_files = $(Proxy_path), {}\n".format(", ".join(fileToTransfer))    
         elif "fnal" in os.uname()[1]:
             jdl_slc6 += "arguments = 1 $(proc) {} $(Step)\n".format(events) # 1 is a dummy to have the same arguments order
@@ -334,7 +335,7 @@ def generate(name, year, gridpack, removeOldRoot, dipoleRecoil, events, jobs, do
         #print " --------------- commented premix!!!!! ------------------ "
         filesToRemove = [gridpack.split("/")[-1]]
         for k in totalSteps_slc6:
-            wrapper_slc6 += "#Working on {} step\n\n".format(k)
+            wrapper_slc6 += "echo Working on {} step\n\n".format(k)
             file = list(filter(lambda j: k.lower() in j.lower(), inputsCfg_slc6))[0].split("/")[-1]
             if k == "premix":
                 if not donePremixFirst:
