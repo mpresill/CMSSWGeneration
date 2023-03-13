@@ -92,6 +92,8 @@ if nfiles >0:
 
 if len(missing_out) ==0 and len(missing_tot) !=0 or len(list(set(sorted(done)).difference(set(finished)))) ==0:
     missing = missing_tot
+elif len(missing_tot)> len(missing_out):
+    missing = missing_tot
 else:
     missing = missing_out
 
