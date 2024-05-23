@@ -1,8 +1,14 @@
 Universe = vanilla 
 Executable = {WRAPPER}
 should_transfer_files = YES
-Error = log/{FILE}.err_{STEP}
 Log = log/{FILE}_{STEP}.log
+Output = log/{FILE}_{STEP}.out
+Error = log/{FILE}_{STEP}.err
+request_cpus = 2
+request_disk = 5000000
 arguments = 1 100
-transfer_input_files = /uscms_data/d3/izoi/VBS_semilep_aQGC/CMSSWGeneration/generation/data/input_2018/SMP-RunIIAutumn18NanoAODv7-00274_1_cfg.py, /uscms_data/d3/izoi/VBS_semilep_aQGC/CMSSWGeneration/generation/data/CMSSWs/CMSSW_10_2_22.tgz
-Queue 1 proc in ({FILE}_{STEP})
+transfer_input_files = /work/mpresill/nanov7_private_production/CMSSWGeneration/generation/data/input_2018/SMP-RunIIAutumn18NanoAODv7-00274_1_cfg.py, /work/mpresill/nanov7_private_production/CMSSWGeneration/generation/data/CMSSWs/CMSSW_10_2_22_ZV_EFT.tgz
+Accounting_group=cms
+requirements=(TARGET.ProvidesIO=?=True)
++JobFlavour = "workday"
+queue
